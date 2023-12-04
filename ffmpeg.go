@@ -63,12 +63,12 @@ func cutMoive(videoName string, cutPoint int) (bool, error) {
 			return false, errors.New("can not find ffmpeg")
 		} else {
 			output := "output.mp4"
-			output = filepath.Join(filepath.Dir(videoName), output)
+			output = filepath.Join(filepath.Dir(strconv.Quote(videoName)), output)
 			os.Remove(output)
 			args := make([]string, 0)
 			args = append(args, "-ss", strconv.Itoa(cutPoint))
 			args = append(args, "-i", videoName)
-			args = append(args, "-vcodec", "copy", "-acodec", "copy")
+			args = append(args, "-c", "copy")
 			args = append(args, "-y")
 			args = append(args, output)
 			cmd := exec.Command("ffmpeg", args...)
