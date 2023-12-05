@@ -63,8 +63,7 @@ func cutMoive(videoName string, cutPoint int) (bool, error) {
 			return false, errors.New("can not find ffmpeg")
 		} else {
 			output := "output.mp4"
-			output = filepath.Join(filepath.Dir(strconv.Quote(videoName)), output)
-			os.Remove(output)
+			output = filepath.Join(filepath.Dir(videoName), output)
 			args := make([]string, 0)
 			args = append(args, "-ss", strconv.Itoa(cutPoint))
 			args = append(args, "-i", videoName)
@@ -76,11 +75,11 @@ func cutMoive(videoName string, cutPoint int) (bool, error) {
 			cmd.Stderr = &errOut
 			err := cmd.Run()
 			if err != nil {
-				return false, errors.New(errOut.String())
+				return false, wrapError(errors.New(errOut.String()))
 			} else {
 				err = os.Remove(videoName)
 				if err != nil {
-					return false, err
+					return false, wrapError(err)
 				}
 
 				err = os.Rename(output, videoName)
@@ -88,9 +87,9 @@ func cutMoive(videoName string, cutPoint int) (bool, error) {
 					err = tryAddWritePermission(filepath.Dir(videoName))
 					if err == nil {
 						err = os.Rename(output, videoName)
-						return err == nil, err
+						return err == nil, wrapError(err)
 					} else {
-						return false, err
+						return false, wrapError(err)
 					}
 				}
 				return true, nil
@@ -176,4 +175,9 @@ func tryAddWritePermission(dir string) error {
 	}
 
 	return os.Chmod(dir, fs.ModeDir+0777)
+}
+
+func wrapError(err error) error {
+	_, file, line, _ := runtime.Caller(1)
+	return fmt.Errorf("%s:%d %s", file, line, err.Error())
 }
